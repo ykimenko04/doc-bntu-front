@@ -1,0 +1,65 @@
+.card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 17px 15px;
+}
+
+.title {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #26354d;
+  font: 700 13px Manrope;
+  margin: 0 0 9px;
+}
+
+.details {
+  margin: 0;
+  display: grid;
+  gap: 7px;
+}
+
+.detail {
+  display: grid;
+  grid-template-columns: 94px 1fr;
+  gap: 8px;
+  font-size: 10px;
+}
+
+.label {
+  color: #8290a4;
+}
+
+.value {
+  margin: 0;
+  color: #445671;
+}
+
+.editButton {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 12px;
+  padding: 8px 10px;
+  border: 1px solid #dbe5f3;
+  border-radius: 5px;
+  background: #fff;
+  color: var(--blue);
+  font-size: 11px;
+  font-weight: 600;
+  transition:
+    border-color 0.16s,
+    background-color 0.16s,
+    box-shadow 0.16s;
+}
+
+.editButton:hover {
+  border-color: #a9c3ed;
+  background: #f7faff;
+}
+
+.editButton:focus-visible {
+  outline: 0;
+  border-color: #86aafc;
+  box-shadow: 0 0 0 3px #eaf0ff;
+}
