@@ -63,7 +63,7 @@ describe('ApplicationsPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Факультет' }))
     fireEvent.click(screen.getByRole('option', { name: 'Машиностроительный' }))
     fireEvent.click(screen.getByRole('button', { name: 'Статус' }))
-    fireEvent.click(screen.getByRole('option', { name: 'Подписан' }))
+    fireEvent.click(screen.getByRole('option', { name: 'Закрыт' }))
     fireEvent.click(screen.getByRole('button', { name: 'Фильтровать' }))
 
     expect(screen.getByRole('link', { name: 'З-2026/071' })).toBeInTheDocument()
@@ -86,7 +86,7 @@ describe('ApplicationsPage', () => {
   })
 
   it('restores applied filters from the URL', async () => {
-    renderPage('/applications?status=SIGNED')
+    renderPage('/applications?status=Закрыт')
     await screen.findByRole('link', { name: 'З-2026/084' })
 
     expect(screen.getByRole('link', { name: 'З-2026/071' })).toBeInTheDocument()

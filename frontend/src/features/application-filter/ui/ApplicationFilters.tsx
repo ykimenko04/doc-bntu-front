@@ -17,11 +17,8 @@ type ApplicationFiltersProps = {
 
 const statusOptions: { value: Status | 'all'; label: string }[] = [
   { value: 'all', label: 'Все статусы' },
-  { value: 'ACTIVE', label: 'Активна' },
-  { value: 'DRAFT', label: 'Черновик' },
-  { value: 'REVIEW', label: 'На проверке' },
-  { value: 'SIGNED', label: 'Подписан' },
-  { value: 'ARCHIVED', label: 'Архив' },
+  { value: 'Заявка', label: 'Заявка' },
+  { value: 'Закрыт', label: 'Закрыт' },
 ]
 
 export function ApplicationFilters({

@@ -19,10 +19,7 @@ function filtersFromSearchParams(searchParams: URLSearchParams): ApplicationFilt
   return {
     query: searchParams.get('query') ?? DEFAULT_APPLICATION_FILTERS.query,
     faculty: searchParams.get('faculty') ?? DEFAULT_APPLICATION_FILTERS.faculty,
-    status:
-      status === 'DRAFT' || status === 'REVIEW' || status === 'SIGNED' || status === 'ARCHIVED'
-        ? status
-        : DEFAULT_APPLICATION_FILTERS.status,
+    status: status === 'Заявка' || status === 'Закрыт' ? status : DEFAULT_APPLICATION_FILTERS.status,
   }
 }
 

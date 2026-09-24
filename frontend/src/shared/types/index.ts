@@ -6,11 +6,9 @@ export const USER_ROLE_LABELS: Record<Role, string> = {
 }
 
 export const Status = {
-  ACTIVE: 'ACTIVE',
-  DRAFT: 'DRAFT',
-  REVIEW: 'REVIEW',
-  SIGNED: 'SIGNED',
-  ARCHIVED: 'ARCHIVED',
+  ACTIVE: 'Активен',
+  CLOSED: 'Закрыт',
+  APPLICATION: 'Заявка',
 } as const
 export type Status = (typeof Status)[keyof typeof Status]
 

@@ -185,7 +185,7 @@ export function OrganizationPage() {
     window.setTimeout(() => setNotification(''), 2500)
   }
   const setStatus = (value: string) => {
-    setNextStatus(value === 'На проверке' ? 'Закрыт' : value)
+    setNextStatus(value)
     setStatusComment('')
     setStatusOpen(true)
   }
@@ -238,7 +238,7 @@ export function OrganizationPage() {
             <button
               className="secondary"
               type="button"
-              onClick={() => setStatus(status === 'Активен' ? 'На проверке' : 'Активен')}
+              onClick={() => setStatus(status === 'Активен' ? 'Закрыт' : 'Активен')}
             >
               Сменить статус
             </button>

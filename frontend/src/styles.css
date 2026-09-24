@@ -683,27 +683,15 @@ tr:last-child td {
   font-weight: 700;
 }
 
-.status-active,
-.status-signed {
-  color: #25856f;
-  background: #e6f6f1;
+.status-active {
+  background: #dff6e9;
+  color: #178650;
 }
 
-.status-review {
-  color: #b5782e;
-  background: #fff3df;
+.status-closed {
+  background: #edf0f3;
+  color: #657180;
 }
-
-.status-draft {
-  color: #718098;
-  background: #edf1f6;
-}
-
-.status-archived {
-  color: #8c6c80;
-  background: #f4edf2;
-}
-
 .empty {
   text-align: center;
   padding: 35px;

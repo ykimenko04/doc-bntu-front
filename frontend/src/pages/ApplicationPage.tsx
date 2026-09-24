@@ -24,7 +24,7 @@ export function ApplicationPage() {
         <div className="panel">
           <div className="panel-title">
             <h2>Детали заявки</h2>
-            <StatusBadge status="REVIEW" />
+            <StatusBadge status="Заявка" />
           </div>
           <dl className="data-list">
             <div>

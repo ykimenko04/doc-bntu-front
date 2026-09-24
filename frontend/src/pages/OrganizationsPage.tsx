@@ -6,6 +6,7 @@ import { useModalAccessibility } from '../shared/hooks/useModalAccessibility'
 import type { Organization } from '../shared/types'
 import { PageHeader } from '../shared/ui/PageHeader'
 import { Select } from '../shared/ui/Select'
+import { StatusBadge } from '../shared/ui/StatusBadge'
 import styles from './OrganizationsPage.module.css'
 
 type RegistryRow = Organization & {
@@ -22,7 +23,7 @@ const rows: RegistryRow[] = [
     unp: '100307586',
     contact: 'Анна Ковалёва',
     contracts: 4,
-    status: 'ACTIVE',
+    status: 'Активен',
     faculty: 'Автотракторный',
     contractNumber: 'д.с. №1 от 06.05.2025 №221-АТФ/280 от 01.10.2020',
     endDate: '31.12.2030',
@@ -34,7 +35,7 @@ const rows: RegistryRow[] = [
     unp: '100307586',
     contact: 'Анна Ковалёва',
     contracts: 4,
-    status: 'ACTIVE',
+    status: 'Активен',
     faculty: 'Горного дела и инженерной экологии',
     contractNumber: 'д.с. №1 от 06.05.2025 №221-АТФ/280 от 01.10.2020',
     endDate: '31.12.2030',
@@ -46,7 +47,7 @@ const rows: RegistryRow[] = [
     unp: '100307586',
     contact: 'Анна Ковалёва',
     contracts: 4,
-    status: 'ACTIVE',
+    status: 'Активен',
     faculty: 'Машиностроительный',
     contractNumber: 'д.с. №1 от 06.05.2025 №221-АТФ/280 от 01.10.2020',
     endDate: '31.12.2030',
@@ -58,7 +59,7 @@ const rows: RegistryRow[] = [
     unp: '100307586',
     contact: 'Анна Ковалёва',
     contracts: 4,
-    status: 'ACTIVE',
+    status: 'Активен',
     faculty: 'Механико-технологический',
     contractNumber: 'д.с. №1 от 06.05.2025 №221-АТФ/280 от 01.10.2020',
     endDate: '31.12.2030',
@@ -70,7 +71,7 @@ const rows: RegistryRow[] = [
     unp: '100307586',
     contact: 'Анна Ковалёва',
     contracts: 4,
-    status: 'ACTIVE',
+    status: 'Активен',
     faculty: 'Маркетинга, менеджмента, предпринимательства',
     contractNumber: 'д.с. №1 от 06.05.2025 №221-АТФ/280 от 01.10.2020',
     endDate: '31.12.2030',
@@ -82,7 +83,7 @@ const rows: RegistryRow[] = [
     unp: '100307586',
     contact: 'Анна Ковалёва',
     contracts: 4,
-    status: 'ACTIVE',
+    status: 'Активен',
     faculty: 'Энергетический',
     contractNumber: 'д.с. №1 от 06.05.2025 №221-АТФ/280 от 01.10.2020',
     endDate: '31.12.2030',
@@ -94,7 +95,7 @@ const rows: RegistryRow[] = [
     unp: '100307586',
     contact: 'Анна Ковалёва',
     contracts: 4,
-    status: 'ACTIVE',
+    status: 'Активен',
     faculty: 'Информационных технологий и робототехники',
     contractNumber: 'д.с. №1 от 06.05.2025 №221-АТФ/280 от 01.10.2020',
     endDate: '31.12.2030',
@@ -106,7 +107,7 @@ const rows: RegistryRow[] = [
     unp: '100307586',
     contact: 'Анна Ковалёва',
     contracts: 4,
-    status: 'ACTIVE',
+    status: 'Активен',
     faculty: 'Энергетического строительства',
     contractNumber: 'д.с. №1 от 06.05.2025 №221-АТФ/280 от 01.10.2020',
     endDate: '31.12.2030',
@@ -118,7 +119,7 @@ const rows: RegistryRow[] = [
     unp: '100307586',
     contact: 'Анна Ковалёва',
     contracts: 4,
-    status: 'ACTIVE',
+    status: 'Активен',
     faculty: 'Строительный',
     contractNumber: 'д.с. №1 от 06.05.2025 №221-АТФ/280 от 01.10.2020',
     endDate: '31.12.2030',
@@ -130,7 +131,7 @@ const rows: RegistryRow[] = [
     unp: '100307586',
     contact: 'Анна Ковалёва',
     contracts: 4,
-    status: 'ACTIVE',
+    status: 'Активен',
     faculty: 'Приборостроительный',
     contractNumber: 'д.с. №1 от 06.05.2025 №221-АТФ/280 от 01.10.2020',
     endDate: '31.12.2030',
@@ -142,7 +143,7 @@ const rows: RegistryRow[] = [
     unp: '100307586',
     contact: 'Анна Ковалёва',
     contracts: 4,
-    status: 'ACTIVE',
+    status: 'Активен',
     faculty: 'Транспортных коммуникаций',
     contractNumber: 'д.с. №1 от 06.05.2025 №221-АТФ/280 от 01.10.2020',
     endDate: '31.12.2030',
@@ -393,7 +394,7 @@ export function OrganizationsPage() {
                     <td>{row.faculty}</td>
                     <td>{row.contractNumber}</td>
                     <td>
-                      <span className={styles.status}>Активен</span>
+                      <StatusBadge status={row.status} />
                     </td>
                     <td>
                       <span className={styles.date}>{row.endDate}</span>
@@ -420,7 +421,7 @@ export function OrganizationsPage() {
         <div>
           <span>Требуют внимания</span>
           <strong className="accent-text">6</strong>
-          <small>документов на проверке</small>
+          <small>документов требуют внимания</small>
         </div>
       </div>
     </>

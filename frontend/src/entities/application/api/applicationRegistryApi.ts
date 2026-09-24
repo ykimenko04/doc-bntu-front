@@ -15,7 +15,7 @@ const registry: ApplicationRegistryItem[] = [
     receivedAt: '2026-09-16',
     signedAt: '2026-09-20',
     faculties: ['Информационных технологий и робототехники', 'Энергетический'],
-    status: 'REVIEW',
+    status: 'Заявка',
     scan: createDemoScan('З-2026-086'),
   },
   {
@@ -25,7 +25,7 @@ const registry: ApplicationRegistryItem[] = [
     receivedAt: '2026-09-12',
     signedAt: '2026-09-18',
     faculties: ['Энергетический', 'Механико-технологический'],
-    status: 'SIGNED',
+    status: 'Закрыт',
   },
   {
     id: 3,
@@ -33,7 +33,7 @@ const registry: ApplicationRegistryItem[] = [
     organization: { id: 3, name: 'ОАО «Гродно Азот»' },
     receivedAt: '2026-09-05',
     faculties: ['Машиностроительный', 'Горного дела и инженерной экологии'],
-    status: 'DRAFT',
+    status: 'Заявка',
     scan: createDemoScan('З-2026-079'),
   },
   {
@@ -48,7 +48,7 @@ const registry: ApplicationRegistryItem[] = [
       'Механико-технологический',
       'Маркетинга, менеджмента, предпринимательства',
     ],
-    status: 'SIGNED',
+    status: 'Закрыт',
     scan: createDemoScan('З-2026-071'),
   },
 ]
