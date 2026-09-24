@@ -1,58 +1,40 @@
+import { apiRequest } from '../../../shared/api/client'
+import type { Status } from '../../../shared/types'
 import type { ApplicationRegistryItem } from '../model/types'
 
-// Временный локальный adapter: backend-контракт реестра заявок в проекте пока отсутствует.
-// После согласования API этот модуль заменяется вызовом shared/api/client без изменений UI.
-const createDemoScan = (number: string) => ({
-  name: `${number}.txt`,
-  url: `data:text/plain;charset=utf-8,${encodeURIComponent(`Временный скан заявки ${number}`)}`,
-})
+type ApplicationRegistryResponse = {
+  items: ApplicationRegistryItem[]
+  total: number
+}
 
-const registry: ApplicationRegistryItem[] = [
-  {
-    id: 1,
-    number: 'З-2026/086',
-    organization: { id: 1, name: 'ОАО «Беларуськалий»' },
-    receivedAt: '2026-09-16',
-    signedAt: '2026-09-20',
-    faculties: ['Информационных технологий и робототехники', 'Энергетический'],
-    status: 'Заявка',
-    scan: createDemoScan('З-2026-086'),
-  },
-  {
-    id: 2,
-    number: 'З-2026/084',
-    organization: { id: 2, name: 'ЗАО «Атлант»' },
-    receivedAt: '2026-09-12',
-    signedAt: '2026-09-18',
-    faculties: ['Энергетический', 'Механико-технологический'],
-    status: 'Закрыт',
-  },
-  {
-    id: 3,
-    number: 'З-2026/079',
-    organization: { id: 3, name: 'ОАО «Гродно Азот»' },
-    receivedAt: '2026-09-05',
-    faculties: ['Машиностроительный', 'Горного дела и инженерной экологии'],
-    status: 'Заявка',
-    scan: createDemoScan('З-2026-079'),
-  },
-  {
-    id: 4,
-    number: 'З-2026/071',
-    organization: { id: 4, name: 'ОАО «МТЗ»' },
-    receivedAt: '2026-08-28',
-    signedAt: '2026-09-03',
-    faculties: [
-      'Автотракторный',
-      'Машиностроительный',
-      'Механико-технологический',
-      'Маркетинга, менеджмента, предпринимательства',
-    ],
-    status: 'Закрыт',
-    scan: createDemoScan('З-2026-071'),
-  },
-]
+function normalizeListResponse(data: unknown): ApplicationRegistryResponse {
+  if (Array.isArray(data)) return { items: data as ApplicationRegistryItem[], total: data.length }
+  if (data && typeof data === 'object') {
+    const items = Array.isArray((data as any).items) ? (data as any).items : []
+    const total = typeof (data as any).total === 'number' ? (data as any).total : items.length
+    return { items, total }
+  }
+  return { items: [], total: 0 }
+}
 
 export async function listApplicationRegistry(): Promise<ApplicationRegistryItem[]> {
-  return registry
+  const data = await apiRequest<unknown>('/api/applications')
+  return normalizeListResponse(data).items
+}
+
+export type ApplicationDetails = {
+  id: number
+  number: string
+  organization: { id: number; name: string }
+  receivedAt?: string
+  signedAt?: string
+  faculties?: string[]
+  status?: Status
+  scan?: { name: string; url: string }
+  [key: string]: unknown
+}
+
+export async function getApplication(id: number): Promise<ApplicationDetails> {
+  const data = await apiRequest<ApplicationDetails>(`/api/applications/${id}`)
+  return data
 }

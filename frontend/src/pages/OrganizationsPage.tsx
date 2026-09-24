@@ -1,175 +1,15 @@
 import { ArrowUpRight, ChevronDown, ChevronRight, Folder, Plus, Search } from 'lucide-react'
-import { type FormEvent, useMemo, useState } from 'react'
+import { type FormEvent, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 
+import { listOrganizations, type OrganizationRegistryRow } from '../entities/organization'
+import { getErrorMessage } from '../shared/api/client'
 import { useModalAccessibility } from '../shared/hooks/useModalAccessibility'
-import type { Organization } from '../shared/types'
+import { useFaculties } from '../shared/hooks/useFaculties'
 import { PageHeader } from '../shared/ui/PageHeader'
 import { Select } from '../shared/ui/Select'
 import { StatusBadge } from '../shared/ui/StatusBadge'
 import styles from './OrganizationsPage.module.css'
-
-type RegistryRow = Organization & {
-  faculty: string
-  contractNumber: string
-  endDate: string
-  specialties: string
-}
-
-const rows: RegistryRow[] = [
-  {
-    id: 1,
-    name: 'ОАО «МТЗ»',
-    unp: '100307586',
-    contact: 'Анна Ковалёва',
-    contracts: 4,
-    status: 'Активен',
-    faculty: 'Автотракторный',
-    contractNumber: 'д.с. №1 от 06.05.2025 №221-АТФ/280 от 01.10.2020',
-    endDate: '31.12.2030',
-    specialties: '1-27 01 01-02, 1-37 01 03, 1-36 01 07 · ещё 12',
-  },
-  {
-    id: 1,
-    name: 'ОАО «МТЗ»',
-    unp: '100307586',
-    contact: 'Анна Ковалёва',
-    contracts: 4,
-    status: 'Активен',
-    faculty: 'Горного дела и инженерной экологии',
-    contractNumber: 'д.с. №1 от 06.05.2025 №221-АТФ/280 от 01.10.2020',
-    endDate: '31.12.2030',
-    specialties: '6-05-0716-10',
-  },
-  {
-    id: 1,
-    name: 'ОАО «МТЗ»',
-    unp: '100307586',
-    contact: 'Анна Ковалёва',
-    contracts: 4,
-    status: 'Активен',
-    faculty: 'Машиностроительный',
-    contractNumber: 'д.с. №1 от 06.05.2025 №221-АТФ/280 от 01.10.2020',
-    endDate: '31.12.2030',
-    specialties: '1-36 01 03 02, 1-36 01 03 01 · ещё 4',
-  },
-  {
-    id: 1,
-    name: 'ОАО «МТЗ»',
-    unp: '100307586',
-    contact: 'Анна Ковалёва',
-    contracts: 4,
-    status: 'Активен',
-    faculty: 'Механико-технологический',
-    contractNumber: 'д.с. №1 от 06.05.2025 №221-АТФ/280 от 01.10.2020',
-    endDate: '31.12.2030',
-    specialties: '1-42 01 01-01, 1-36 01 06 · ещё 6',
-  },
-  {
-    id: 1,
-    name: 'ОАО «МТЗ»',
-    unp: '100307586',
-    contact: 'Анна Ковалёва',
-    contracts: 4,
-    status: 'Активен',
-    faculty: 'Маркетинга, менеджмента, предпринимательства',
-    contractNumber: 'д.с. №1 от 06.05.2025 №221-АТФ/280 от 01.10.2020',
-    endDate: '31.12.2030',
-    specialties: '1-25 01 07, 6-05-0311-02',
-  },
-  {
-    id: 1,
-    name: 'ОАО «МТЗ»',
-    unp: '100307586',
-    contact: 'Анна Ковалёва',
-    contracts: 4,
-    status: 'Активен',
-    faculty: 'Энергетический',
-    contractNumber: 'д.с. №1 от 06.05.2025 №221-АТФ/280 от 01.10.2020',
-    endDate: '31.12.2030',
-    specialties: '1-43 01 05, 1-43 01 03 · ещё 4',
-  },
-  {
-    id: 1,
-    name: 'ОАО «МТЗ»',
-    unp: '100307586',
-    contact: 'Анна Ковалёва',
-    contracts: 4,
-    status: 'Активен',
-    faculty: 'Информационных технологий и робототехники',
-    contractNumber: 'д.с. №1 от 06.05.2025 №221-АТФ/280 от 01.10.2020',
-    endDate: '31.12.2030',
-    specialties: '1-40 01 01, 1-40 05 01, 1-53 01 05 · ещё 5',
-  },
-  {
-    id: 1,
-    name: 'ОАО «МТЗ»',
-    unp: '100307586',
-    contact: 'Анна Ковалёва',
-    contracts: 4,
-    status: 'Активен',
-    faculty: 'Энергетического строительства',
-    contractNumber: 'д.с. №1 от 06.05.2025 №221-АТФ/280 от 01.10.2020',
-    endDate: '31.12.2030',
-    specialties: '7-07-0732-02',
-  },
-  {
-    id: 1,
-    name: 'ОАО «МТЗ»',
-    unp: '100307586',
-    contact: 'Анна Ковалёва',
-    contracts: 4,
-    status: 'Активен',
-    faculty: 'Строительный',
-    contractNumber: 'д.с. №1 от 06.05.2025 №221-АТФ/280 от 01.10.2020',
-    endDate: '31.12.2030',
-    specialties: '1-70 02 01, 1-07-0732-01',
-  },
-  {
-    id: 1,
-    name: 'ОАО «МТЗ»',
-    unp: '100307586',
-    contact: 'Анна Ковалёва',
-    contracts: 4,
-    status: 'Активен',
-    faculty: 'Приборостроительный',
-    contractNumber: 'д.с. №1 от 06.05.2025 №221-АТФ/280 от 01.10.2020',
-    endDate: '31.12.2030',
-    specialties: '1-38 02 01, 1-54 01 01-01 · ещё 4',
-  },
-  {
-    id: 1,
-    name: 'ОАО «МТЗ»',
-    unp: '100307586',
-    contact: 'Анна Ковалёва',
-    contracts: 4,
-    status: 'Активен',
-    faculty: 'Транспортных коммуникаций',
-    contractNumber: 'д.с. №1 от 06.05.2025 №221-АТФ/280 от 01.10.2020',
-    endDate: '31.12.2030',
-    specialties: '1-36 11 01-01',
-  },
-]
-
-const facultyNames = [
-  'Автотракторный',
-  'Архитектурный',
-  'Военно-технический',
-  'Горного дела и инженерной экологии',
-  'Инженерно-педагогический',
-  'Информационных технологий и робототехники',
-  'Маркетинга, менеджмента, предпринимательства',
-  'Машиностроительный',
-  'Международного сотрудничества',
-  'Механико-технологический',
-  'Приборостроительный',
-  'Спортивно-технический',
-  'Строительный',
-  'Технологий управления и гуманитаризации',
-  'Транспортных коммуникаций',
-  'Энергетический',
-  'Энергетического строительства',
-]
 
 type NewOrganizationForm = {
   shortName: string
@@ -186,10 +26,20 @@ const initialNewOrganization: NewOrganizationForm = {
 }
 
 export function OrganizationsPage() {
+  const { faculties: facultyNames } = useFaculties()
+
   const [query, setQuery] = useState('')
   const [facultyQuery, setFacultyQuery] = useState('')
   const [selectedFaculty, setSelectedFaculty] = useState('Все факультеты')
   const [year, setYear] = useState('Любой год окончания')
+
+  const [rows, setRows] = useState<OrganizationRegistryRow[]>([])
+  const [isLoading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+
+  const [page, setPage] = useState(1)
+  const pageSize = 50
+
   const [isCreateModalOpen, setCreateModalOpen] = useState(false)
   const [newOrganization, setNewOrganization] =
     useState<NewOrganizationForm>(initialNewOrganization)
@@ -197,31 +47,72 @@ export function OrganizationsPage() {
     () => setCreateModalOpen(false),
     isCreateModalOpen,
   )
+
+  useEffect(() => {
+    let isCurrent = true
+
+    setLoading(true)
+    setError('')
+
+    void listOrganizations({
+      query: query.trim(),
+      faculty: selectedFaculty === 'Все факультеты' ? '' : selectedFaculty,
+      year: year === 'Любой год окончания' ? '' : year,
+      page,
+      pageSize,
+    })
+      .then((response) => {
+        if (!isCurrent) return
+        setRows(response.items)
+      })
+      .catch((error) => {
+        if (!isCurrent) return
+        setError(getErrorMessage(error))
+        setRows([])
+      })
+      .finally(() => {
+        if (!isCurrent) return
+        setLoading(false)
+      })
+
+    return () => {
+      isCurrent = false
+    }
+  }, [query, selectedFaculty, year, page])
+
   const filteredRows = useMemo(
     () =>
       rows.filter(
         (row) =>
           (!query ||
-            `${row.name} ${row.contractNumber}`.toLowerCase().includes(query.toLowerCase())) &&
+            `${row.name} ${row.contractNumber} ${row.specialties}`
+              .toLowerCase()
+              .includes(query.toLowerCase())) &&
           (selectedFaculty === 'Все факультеты' || row.faculty === selectedFaculty) &&
           (!facultyQuery || row.faculty.toLowerCase().includes(facultyQuery.toLowerCase())),
       ),
-    [query, facultyQuery, selectedFaculty],
+    [query, facultyQuery, selectedFaculty, rows],
   )
+
   const resetFilters = () => {
     setQuery('')
     setFacultyQuery('')
     setSelectedFaculty('Все факультеты')
     setYear('Любой год окончания')
+    setPage(1)
   }
+
   const goToStatistics = () =>
     document
       .getElementById('organization-stats')
       ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+
   const updateNewOrganization = (field: keyof NewOrganizationForm, value: string) =>
     setNewOrganization((current) => ({ ...current, [field]: value }))
+
   const saveNewOrganization = (event: FormEvent) => {
     event.preventDefault()
+    // API создания организации будет добавлен позже.
     setCreateModalOpen(false)
     setNewOrganization(initialNewOrganization)
   }
@@ -243,6 +134,13 @@ export function OrganizationsPage() {
           </div>
         }
       />
+
+      {error && (
+        <div className="page-notification is-error" role="alert">
+          {error}
+        </div>
+      )}
+
       {isCreateModalOpen && (
         <div
           className="modal-backdrop"
@@ -261,6 +159,9 @@ export function OrganizationsPage() {
             onSubmit={saveNewOrganization}
           >
             <h2 id="new-organization-title">Новая организация</h2>
+            <p style={{ marginTop: 0, color: '#7c8799', fontSize: 12 }}>
+              Создание организаций будет доступно после подключения API.
+            </p>
             <label className="new-organization-field">
               Краткое наименование
               <input
@@ -292,12 +193,13 @@ export function OrganizationsPage() {
                 onChange={(event) => updateNewOrganization('department', event.target.value)}
               />
             </label>
-            <button className="primary new-organization-submit" type="submit">
+            <button className="primary new-organization-submit" type="submit" disabled>
               Создать карточку
             </button>
           </form>
         </div>
       )}
+
       <section className={styles.registry}>
         <aside className={styles.facultyTree}>
           <div className={styles.facultyTitle}>ДЕРЕВО ФАКУЛЬТЕТОВ</div>
@@ -310,43 +212,56 @@ export function OrganizationsPage() {
             />
           </div>
           <button
+            type="button"
             className={`${styles.facultyRoot} ${selectedFaculty === 'Все факультеты' ? styles.selected : ''}`}
-            onClick={() => setSelectedFaculty('Все факультеты')}
+            onClick={() => {
+              setSelectedFaculty('Все факультеты')
+              setPage(1)
+            }}
           >
             <ChevronDown size={13} /> <span>Все факультеты</span>
             <b>{rows.length}</b>
           </button>
           {facultyNames
-            .filter(
-              (name) => !facultyQuery || name.toLowerCase().includes(facultyQuery.toLowerCase()),
-            )
+            .filter((name) => !facultyQuery || name.toLowerCase().includes(facultyQuery.toLowerCase()))
             .map((name) => (
               <button
+                type="button"
                 className={`${styles.facultyItem} ${selectedFaculty === name ? styles.selected : ''}`}
                 key={name}
-                onClick={() => setSelectedFaculty(name)}
+                onClick={() => {
+                  setSelectedFaculty(name)
+                  setPage(1)
+                }}
               >
-                <ChevronRight size={12} />
+                <ChevronRight size={13} />
                 <Folder size={13} />
                 <span>{name}</span>
                 <b>{rows.filter((row) => row.faculty === name).length}</b>
               </button>
             ))}
         </aside>
+
         <div className={styles.registryMain}>
           <div className={styles.toolbar}>
             <div className={styles.registrySearch}>
               <Search size={16} />
               <input
                 value={query}
-                onChange={(event) => setQuery(event.target.value)}
+                onChange={(event) => {
+                  setQuery(event.target.value)
+                  setPage(1)
+                }}
                 placeholder="Организация, номер или код специальности"
               />
             </div>
             <Select
               className="registry-filter-select"
               value={selectedFaculty}
-              onChange={setSelectedFaculty}
+              onChange={(value) => {
+                setSelectedFaculty(value)
+                setPage(1)
+              }}
               searchable
               searchPlaceholder="Поиск факультета"
               options={['Все факультеты', ...facultyNames].map((name) => ({
@@ -357,7 +272,10 @@ export function OrganizationsPage() {
             <Select
               className="registry-filter-select registry-year-select"
               value={year}
-              onChange={setYear}
+              onChange={(value) => {
+                setYear(value)
+                setPage(1)
+              }}
               options={['Любой год окончания', '2030', '2029', '2028'].map((value) => ({
                 value,
                 label: value,
@@ -367,46 +285,69 @@ export function OrganizationsPage() {
               Сбросить фильтры
             </button>
           </div>
+
           <div className={styles.tableWrap}>
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th>Организация</th>
-                  <th>Факультет</th>
-                  <th>Номер договора / действующая редакция</th>
-                  <th>Статус</th>
-                  <th>Дата окончания</th>
-                  <th>Специальности факультета</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredRows.map((row, index) => (
-                  <tr
-                    className={index === 6 ? styles.activeRow : ''}
-                    key={`${row.faculty}-${index}`}
-                  >
-                    <td>
-                      <Link to={`/organizations/${row.id}`} className={styles.organization}>
-                        {row.name}
-                        <ArrowUpRight size={12} />
-                      </Link>
-                    </td>
-                    <td>{row.faculty}</td>
-                    <td>{row.contractNumber}</td>
-                    <td>
-                      <StatusBadge status={row.status} />
-                    </td>
-                    <td>
-                      <span className={styles.date}>{row.endDate}</span>
-                    </td>
-                    <td>{row.specialties}</td>
+            {isLoading ? (
+              <div className="empty" role="status">
+                Загрузка…
+              </div>
+            ) : (
+              <table className={styles.table}>
+                <thead>
+                  <tr>
+                    <th>Организация</th>
+                    <th>Факультет</th>
+                    <th>Номер договора / действующая редакция</th>
+                    <th>Статус</th>
+                    <th>Дата окончания</th>
+                    <th>Специальности факультета</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {filteredRows.map((row) => (
+                    <tr key={`${row.id}-${row.faculty}-${row.contractNumber}`}>
+                      <td>
+                        <Link to={`/organizations/${row.id}`} className={styles.organization}>
+                          {row.name}
+                          <ArrowUpRight size={12} />
+                        </Link>
+                      </td>
+                      <td>{row.faculty}</td>
+                      <td>{row.contractNumber}</td>
+                      <td>{row.status ? <StatusBadge status={row.status} /> : '—'}</td>
+                      <td>
+                        <span className={styles.date}>{row.endDate}</span>
+                      </td>
+                      <td>{row.specialties}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+
+          <div style={{ display: 'flex', gap: 10, padding: 10, alignItems: 'center' }}>
+            <button
+              className="secondary"
+              type="button"
+              disabled={page <= 1}
+              onClick={() => setPage((value) => Math.max(1, value - 1))}
+            >
+              Назад
+            </button>
+            <span style={{ fontSize: 12, color: '#7c8799' }}>Страница {page}</span>
+            <button
+              className="secondary"
+              type="button"
+              disabled={rows.length < pageSize}
+              onClick={() => setPage((value) => value + 1)}
+            >
+              Вперед
+            </button>
           </div>
         </div>
       </section>
+
       <div id="organization-stats" className="stats" style={{ marginTop: 28 }}>
         <div>
           <span>Всего организаций</span>

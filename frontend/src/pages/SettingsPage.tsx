@@ -1,5 +1,5 @@
 import { Building2, Check, LockKeyhole, Save, UserRound } from 'lucide-react'
-import { FormEvent, useState } from 'react'
+import { FormEvent, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 
 import { useAuth } from '../app/providers'
@@ -9,24 +9,24 @@ import styles from './SettingsPage.module.css'
 
 type SettingsSection = 'profile' | 'security' | 'requisites'
 
-const initialRequisites = {
-  fullName: 'Белорусский национальный технический университет',
-  signerPosition: 'Проректор по учебной работе',
-  signerName: 'Николайчик Юрий Александрович',
-  powerOfAttorneyNumber: '01-19/1090',
-  powerOfAttorneyDate: '2026-02-10',
-  legalAddress: '220013, г. Минск, пр-т Независимости, 65',
-  unp: '100 354 447',
-  okpo: '02 071 903',
-  bankAccount: 'BY69 AKBB 3632 9016 3601 3550 0000',
-  bankName: 'ОАО «АСБ Беларусбанк»',
-  bic: 'AKBBBY2X',
+const emptyRequisites = {
+  fullName: '',
+  signerPosition: '',
+  signerName: '',
+  powerOfAttorneyNumber: '',
+  powerOfAttorneyDate: '',
+  legalAddress: '',
+  unp: '',
+  okpo: '',
+  bankAccount: '',
+  bankName: '',
+  bic: '',
 }
-
 export function SettingsPage() {
   const { user } = useAuth()
   const [section, setSection] = useState<SettingsSection>('profile')
-  const [requisites, setRequisites] = useState(initialRequisites)
+  const [requisites, setRequisites] = useState(emptyRequisites)
+  const [isLoadingRequisites, setLoadingRequisites] = useState(true)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
   const [isSavingRequisites, setIsSavingRequisites] = useState(false)
@@ -35,6 +35,43 @@ export function SettingsPage() {
     setMessage(text)
     window.setTimeout(() => setMessage(''), 2500)
   }
+
+  
+  useEffect(() => {
+    let isCurrent = true
+    setLoadingRequisites(true)
+
+    void settingsApi
+      .getBntuRequisites()
+      .then((dto) => {
+        if (!isCurrent) return
+        setRequisites({
+          fullName: dto.full_name ?? '',
+          signerPosition: dto.signer_position ?? '',
+          signerName: dto.signer_name ?? '',
+          powerOfAttorneyNumber: dto.power_of_attorney_number ?? '',
+          powerOfAttorneyDate: dto.power_of_attorney_date ?? '',
+          legalAddress: dto.legal_address ?? '',
+          unp: dto.unp ?? '',
+          okpo: dto.okpo ?? '',
+          bankAccount: dto.bank_account ?? '',
+          bankName: dto.bank_name ?? '',
+          bic: dto.bic ?? '',
+        })
+      })
+      .catch(() => {
+        if (!isCurrent) return
+        setError('Не удалось загрузить реквизиты. Проверьте доступ к серверу.')
+      })
+      .finally(() => {
+        if (!isCurrent) return
+        setLoadingRequisites(false)
+      })
+
+    return () => {
+      isCurrent = false
+    }
+  }, [])
 
   const saveRequisites = async (event: FormEvent) => {
     event.preventDefault()
@@ -62,7 +99,7 @@ export function SettingsPage() {
     }
   }
 
-  const updateRequisite = (field: keyof typeof initialRequisites, value: string) => {
+  const updateRequisite = (field: keyof typeof emptyRequisites, value: string) => {
     setRequisites((current) => ({ ...current, [field]: value }))
   }
 
@@ -156,6 +193,9 @@ export function SettingsPage() {
           {section === 'requisites' && (
             <form className={`${styles.panel} ${styles.requisitesPanel}`} onSubmit={saveRequisites}>
               <div className={styles.heading}>
+                {isLoadingRequisites && (
+                  <div className={styles.formHint}>Загрузка реквизитов…</div>
+                )}
                 <div className={styles.icon}>
                   <Building2 size={18} />
                 </div>
@@ -260,7 +300,7 @@ export function SettingsPage() {
                 Если поле оставить пустым, в сформированном документе будет прочерк «___».
               </p>
               <div className={styles.actions}>
-                <button className="primary" type="submit" disabled={isSavingRequisites}>
+                <button className="primary" type="submit" disabled={isLoadingRequisites || isSavingRequisites}>
                   <Save size={16} /> {isSavingRequisites ? 'Сохранение...' : 'Сохранить'}
                 </button>
               </div>

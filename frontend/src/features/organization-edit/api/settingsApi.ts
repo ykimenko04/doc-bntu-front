@@ -1,10 +1,25 @@
 import { apiRequest } from '../../../shared/api/client'
 
+export type SettingsDto = {
+  full_name: string
+  signer_position: string
+  signer_name: string
+  power_of_attorney_number: string
+  power_of_attorney_date: string
+  legal_address: string
+  unp: string
+  okpo: string
+  bank_account: string
+  bank_name: string
+  bic: string
+}
+
 export const settingsApi = {
-  saveBntuRequisites: (values: Record<string, string>) =>
-    apiRequest<void>('/settings', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams(values),
+  getBntuRequisites: () => apiRequest<SettingsDto>('/api/settings'),
+  saveBntuRequisites: (values: SettingsDto) =>
+    apiRequest<void>('/api/settings', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(values),
     }),
 }

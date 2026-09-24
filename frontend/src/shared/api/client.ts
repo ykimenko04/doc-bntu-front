@@ -1,7 +1,8 @@
 ﻿const API_HEALTH_PATH = import.meta.env.VITE_API_HEALTH_PATH ?? '/health'
 
-const API_URL = import.meta.env.VITE_API_URL ?? ''
+const DEFAULT_PROD_API_URL = 'http://localhost:8000'
 
+const API_URL = import.meta.env.VITE_API_URL ?? (import.meta.env.PROD ? DEFAULT_PROD_API_URL : '')
 function joinUrl(baseUrl: string, path: string): string {
   if (!baseUrl) return path
   const normalizedBase = baseUrl.replace(/\/+$/, '')

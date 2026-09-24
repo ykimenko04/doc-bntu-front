@@ -1,7 +1,8 @@
 import { ChevronDown, ChevronUp, SlidersHorizontal } from 'lucide-react'
-import { type FormEvent, Fragment, useState } from 'react'
+import { type FormEvent, Fragment, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 
+import { apiRequest } from '../shared/api/client'
 import { PageHeader } from '../shared/ui/PageHeader'
 import { Select } from '../shared/ui/Select'
 
@@ -20,43 +21,6 @@ type AuditRecord = {
   details?: { field: string; from: string; to: string }
 }
 
-const records: AuditRecord[] = [
-  {
-    id: 1,
-    date: '22.09.2026, 10:42',
-    dateValue: '2026-09-22',
-    actor: 'Алексей Иванов',
-    action: 'Смена статуса',
-    kind: 'status',
-    object: 'Заявка З-2026/086',
-    objectPath: '/applications/1',
-    comment: 'Статус заявки изменён',
-    details: { field: 'Статус', from: 'Закрыта', to: 'Активна' },
-  },
-  {
-    id: 2,
-    date: '21.09.2026, 16:18',
-    dateValue: '2026-09-21',
-    actor: 'Анна Ковалёва',
-    action: 'Загружен файл',
-    kind: 'upload',
-    object: 'Договор Д-2026/041',
-    objectPath: '/organizations/1',
-    comment: 'Добавлен файл договора',
-  },
-  {
-    id: 3,
-    date: '20.09.2026, 09:05',
-    dateValue: '2026-09-20',
-    actor: 'Алексей Иванов',
-    action: 'Создано',
-    kind: 'create',
-    object: 'ОАО «Гродно Азот»',
-    objectPath: '/organizations/1',
-    comment: 'Создана новая организация',
-  },
-]
-
 const actionClass: Record<AuditAction, string> = {
   status: 'audit-action-status',
   upload: 'audit-action-upload',
@@ -66,6 +30,9 @@ const actionClass: Record<AuditAction, string> = {
 }
 
 export function AuditPage() {
+  const [records, setRecords] = useState<AuditRecord[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [loadError, setLoadError] = useState('')
   const [expandedId, setExpandedId] = useState<number | null>(null)
   const [filtersVisible, setFiltersVisible] = useState(true)
   const [filters, setFilters] = useState({
@@ -77,6 +44,13 @@ export function AuditPage() {
     query: '',
   })
   const [draftFilters, setDraftFilters] = useState(filters)
+  const userOptions = useMemo(() => {
+    const actors = Array.from(new Set(records.map((record) => record.actor).filter(Boolean))).sort((a, b) =>
+      a.localeCompare(b, 'ru'),
+    )
+    return [{ value: 'all', label: 'Все сотрудники' }, ...actors.map((actor) => ({ value: actor, label: actor }))]
+  }, [records])
+
   const updateDraft = (field: keyof typeof draftFilters, value: string) =>
     setDraftFilters((current) => ({ ...current, [field]: value }))
   const applyFilters = (event: FormEvent) => {
@@ -90,6 +64,32 @@ export function AuditPage() {
     setFilters(empty)
     setExpandedId(null)
   }
+
+  useEffect(() => {
+    let isCurrent = true
+    setIsLoading(true)
+    setLoadError('')
+
+    void apiRequest<any>('/api/audit')
+      .then((response) => {
+        if (!isCurrent) return
+        const list = response && typeof response === 'object' && 'items' in response ? response.items : response
+        setRecords(Array.isArray(list) ? list : [])
+      })
+      .catch(() => {
+        if (!isCurrent) return
+        setLoadError('Не удалось загрузить журнал событий. Проверьте доступ к серверу.')
+        setRecords([])
+      })
+      .finally(() => {
+        if (!isCurrent) return
+        setIsLoading(false)
+      })
+
+    return () => {
+      isCurrent = false
+    }
+  }, [])
 
   const visibleRecords = records.filter((record) => {
     const searchable =
@@ -131,12 +131,7 @@ export function AuditPage() {
             <Select
               value={draftFilters.user}
               onChange={(value) => updateDraft('user', value)}
-              options={[
-                { value: 'all', label: 'Все сотрудники' },
-                { value: 'Алексей Иванов', label: 'Алексей Иванов' },
-                { value: 'Анна Ковалёва', label: 'Анна Ковалёва' },
-                { value: 'Система', label: 'Система' },
-              ]}
+              options={userOptions}
             />
           </label>
           <label>
@@ -203,6 +198,8 @@ export function AuditPage() {
         </form>
       )}
       <section className="audit-panel">
+        {loadError && <div className="error-box">{loadError}</div>}
+        {isLoading && <div className="note-box">Загрузка...</div>}
         <div className="audit-count">
           Найдено записей: <strong>{visibleRecords.length}</strong>
         </div>
@@ -267,7 +264,7 @@ export function AuditPage() {
                   )}
                 </Fragment>
               ))}
-              {!visibleRecords.length && (
+              {!visibleRecords.length && !isLoading && (
                 <tr>
                   <td className="empty" colSpan={6}>
                     Записей не найдено

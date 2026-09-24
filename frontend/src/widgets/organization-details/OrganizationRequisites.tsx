@@ -13,9 +13,11 @@ export type OrganizationRequisitesData = {
 export function OrganizationRequisites({
   requisites,
   onEdit,
+  editable = true,
 }: {
   requisites: OrganizationRequisitesData
   onEdit: () => void
+  editable?: boolean
 }) {
   return (
     <section className={styles.card}>
@@ -32,13 +34,15 @@ export function OrganizationRequisites({
           <dd className={styles.value}>{requisites.department}</dd>
         </div>
         <div className={styles.detail}>
-          <dt className={styles.label}>Телефоны</dt>
+          <dt className={styles.label}>Телефон</dt>
           <dd className={styles.value}>{requisites.phone || '—'}</dd>
         </div>
       </dl>
-      <button className={styles.editButton} type="button" onClick={onEdit}>
-        Редактировать реквизиты
-      </button>
+      {editable && (
+        <button className={styles.editButton} type="button" onClick={onEdit}>
+          Редактировать реквизиты
+        </button>
+      )}
     </section>
   )
 }

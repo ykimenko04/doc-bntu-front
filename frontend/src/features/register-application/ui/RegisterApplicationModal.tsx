@@ -1,8 +1,8 @@
 import { ChevronDown, X } from 'lucide-react'
-import { type FormEvent, useState } from 'react'
+import { type FormEvent, useMemo, useState } from 'react'
 
+import { useFaculties } from '../../../shared/hooks/useFaculties'
 import { useModalAccessibility } from '../../../shared/hooks/useModalAccessibility'
-import { FACULTIES } from '../../../shared/lib/faculties'
 import styles from './RegisterApplicationModal.module.css'
 
 export type ApplicationForm = {
@@ -27,12 +27,19 @@ export function RegisterApplicationModal({
   onClose,
   onSave,
 }: RegisterApplicationModalProps) {
+  const { faculties } = useFaculties()
   const [isFacultyOpen, setFacultyOpen] = useState(false)
   const [facultyQuery, setFacultyQuery] = useState('')
   const dialogRef = useModalAccessibility<HTMLFormElement>(onClose)
-  const filteredFaculties = FACULTIES.filter((faculty) =>
-    faculty.toLowerCase().includes(facultyQuery.toLowerCase()),
+
+  const filteredFaculties = useMemo(
+    () =>
+      faculties.filter((faculty) =>
+        faculty.toLowerCase().includes(facultyQuery.trim().toLowerCase()),
+      ),
+    [faculties, facultyQuery],
   )
+
   const toggleFaculty = (faculty: string) =>
     onChange({
       ...application,
@@ -40,6 +47,7 @@ export function RegisterApplicationModal({
         ? application.faculties.filter((item) => item !== faculty)
         : [...application.faculties, faculty],
     })
+
   const update = (field: keyof Omit<ApplicationForm, 'faculties'>, value: string) =>
     onChange({ ...application, [field]: value })
 
