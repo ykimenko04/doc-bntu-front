@@ -35,21 +35,17 @@
   display: none;
 }
 
-.sidebar-collapsed .workspace-label {
-  visibility: hidden;
-}
-
-.sidebar-collapsed nav {
+.sidebar-collapsed .sidebar nav {
   display: grid;
 }
 
-.sidebar-collapsed nav a {
+.sidebar-collapsed .sidebar nav a {
   justify-content: center;
   padding-left: 8px;
   padding-right: 8px;
 }
 
-.sidebar-collapsed nav a span {
+.sidebar-collapsed .sidebar nav a span {
   display: none;
 }
 

@@ -1,5 +1,6 @@
 import { Building2, Check, LockKeyhole, Save, UserRound } from 'lucide-react'
 import { FormEvent, useState } from 'react'
+import { Link } from 'react-router-dom'
 
 import { useAuth } from '../app/providers'
 import { settingsApi } from '../features/organization-edit/api/settingsApi'
@@ -23,14 +24,8 @@ const initialRequisites = {
 }
 
 export function SettingsPage() {
-  const { user, updateProfile } = useAuth()
+  const { user } = useAuth()
   const [section, setSection] = useState<SettingsSection>('profile')
-  const [fullName, setFullName] = useState(user?.fullName ?? '')
-  const [username, setUsername] = useState(user?.username ?? '')
-  const [email, setEmail] = useState(user?.email ?? '')
-  const [currentPassword, setCurrentPassword] = useState('')
-  const [newPassword, setNewPassword] = useState('')
-  const [repeatPassword, setRepeatPassword] = useState('')
   const [requisites, setRequisites] = useState(initialRequisites)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
@@ -39,31 +34,6 @@ export function SettingsPage() {
   const showMessage = (text: string) => {
     setMessage(text)
     window.setTimeout(() => setMessage(''), 2500)
-  }
-
-  const saveProfile = (event: FormEvent) => {
-    event.preventDefault()
-    setError('')
-    updateProfile({ fullName, username, email })
-    showMessage('Данные профиля сохранены')
-  }
-
-  const savePassword = (event: FormEvent) => {
-    event.preventDefault()
-    setMessage('')
-    setError('')
-    if (!currentPassword || newPassword.length < 8) {
-      setError('Введите текущий пароль и новый пароль не менее 8 символов')
-      return
-    }
-    if (newPassword !== repeatPassword) {
-      setError('Новые пароли не совпадают')
-      return
-    }
-    setCurrentPassword('')
-    setNewPassword('')
-    setRepeatPassword('')
-    showMessage('Пароль успешно изменён')
   }
 
   const saveRequisites = async (event: FormEvent) => {
@@ -145,7 +115,7 @@ export function SettingsPage() {
         </div>
         <div className={styles.content}>
           {section === 'profile' && (
-            <form className={styles.panel} onSubmit={saveProfile}>
+            <div className={styles.panel}>
               <div className={styles.heading}>
                 <div className={styles.icon}>
                   <UserRound size={18} />
@@ -158,28 +128,11 @@ export function SettingsPage() {
               <div className={styles.fields}>
                 <label>
                   ФИО сотрудника
-                  <input
-                    value={fullName}
-                    onChange={(event) => setFullName(event.target.value)}
-                    required
-                  />
+                  <input value={user?.fullName ?? ''} readOnly />
                 </label>
                 <label>
                   Логин
-                  <input
-                    value={username}
-                    onChange={(event) => setUsername(event.target.value)}
-                    required
-                  />
-                </label>
-                <label>
-                  Электронная почта
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(event) => setEmail(event.target.value)}
-                    required
-                  />
+                  <input value={user?.username ?? ''} readOnly />
                 </label>
                 <label>
                   Роль
@@ -189,61 +142,16 @@ export function SettingsPage() {
                   />
                 </label>
               </div>
-              <div className={styles.actions}>
-                <button className="primary" type="submit">
-                  <Save size={16} /> Сохранить изменения
-                </button>
-              </div>
-            </form>
+              <p>Данные профиля предоставлены сервером.</p>
+            </div>
           )}
           {section === 'security' && (
-            <form className={styles.panel} onSubmit={savePassword}>
-              <div className={styles.heading}>
-                <div className={`${styles.icon} ${styles.securityIcon}`}>
-                  <LockKeyhole size={18} />
-                </div>
-                <div>
-                  <h2>Безопасность</h2>
-                  <p>Регулярно меняйте пароль для защиты учётной записи.</p>
-                </div>
-              </div>
-              <div className={`${styles.fields} ${styles.single}`}>
-                <label>
-                  Текущий пароль
-                  <input
-                    type="password"
-                    value={currentPassword}
-                    onChange={(event) => setCurrentPassword(event.target.value)}
-                    autoComplete="current-password"
-                  />
-                </label>
-                <label>
-                  Новый пароль
-                  <input
-                    type="password"
-                    value={newPassword}
-                    onChange={(event) => setNewPassword(event.target.value)}
-                    minLength={8}
-                    autoComplete="new-password"
-                  />
-                </label>
-                <label>
-                  Повторите новый пароль
-                  <input
-                    type="password"
-                    value={repeatPassword}
-                    onChange={(event) => setRepeatPassword(event.target.value)}
-                    autoComplete="new-password"
-                  />
-                </label>
-              </div>
-              <div className={styles.actions}>
-                <button className="primary" type="submit">
-                  <Save size={16} /> Изменить пароль
-                </button>
-              </div>
-              {error && <div className={`${styles.error} error-box`}>{error}</div>}
-            </form>
+            <div className={styles.panel}>
+              <h2>Безопасность</h2>
+              <Link className="primary" to="/change-password">
+                Изменить пароль
+              </Link>
+            </div>
           )}
           {section === 'requisites' && (
             <form className={`${styles.panel} ${styles.requisitesPanel}`} onSubmit={saveRequisites}>

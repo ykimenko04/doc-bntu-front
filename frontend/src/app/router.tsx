@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react'
-import { Navigate, Outlet, Route, Routes } from 'react-router-dom'
+import { Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom'
 
 import { AppShell } from '../shared/ui/AppShell'
 import { useAuth } from './providers'
@@ -18,6 +18,9 @@ const DataTransferPage = lazy(() =>
 )
 const LoginPage = lazy(() =>
   import('../pages/LoginPage').then((module) => ({ default: module.LoginPage })),
+)
+const ChangePasswordPage = lazy(() =>
+  import('../pages/ChangePasswordPage').then((module) => ({ default: module.ChangePasswordPage })),
 )
 const OrganizationPage = lazy(() =>
   import('../pages/OrganizationPage').then((module) => ({ default: module.OrganizationPage })),
@@ -40,19 +43,37 @@ function PageFallback() {
   )
 }
 
-function Protected() {
+function Protected({ passwordChange = false }: { passwordChange?: boolean }) {
   const { user } = useAuth()
-  return user ? (
+  if (!user) return <Navigate to="/login" replace />
+  if (user.need_password_change && !passwordChange)
+    return <Navigate to="/change-password" replace />
+  return (
     <AppShell>
       <Suspense fallback={<PageFallback />}>
         <Outlet />
       </Suspense>
     </AppShell>
-  ) : (
-    <Navigate to="/login" replace />
   )
 }
 export function AppRouter() {
+  const { loading, sessionError, retrySession } = useAuth()
+  const { pathname } = useLocation()
+  if (loading)
+    return (
+      <div className="page-loading" role="status">
+        Проверка сессии…
+      </div>
+    )
+  if (sessionError && pathname.replace(/\/+$/, '') !== '/login')
+    return (
+      <div className="page-loading">
+        <p role="alert">{sessionError}</p>
+        <button className="primary" onClick={retrySession}>
+          Повторить проверку сессии
+        </button>
+      </div>
+    )
   return (
     <Routes>
       <Route
@@ -63,6 +84,9 @@ export function AppRouter() {
           </Suspense>
         }
       />
+      <Route element={<Protected passwordChange />}>
+        <Route path="change-password" element={<ChangePasswordPage />} />
+      </Route>
       <Route element={<Protected />}>
         <Route index element={<OrganizationsPage />} />
         <Route path="organizations/:id" element={<OrganizationPage />} />

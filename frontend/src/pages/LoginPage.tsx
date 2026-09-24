@@ -1,46 +1,88 @@
-import { ArrowLeft, ArrowRight, FileText, Mail } from 'lucide-react'
-import { FormEvent, useState } from 'react'
-import { Navigate, useNavigate } from 'react-router-dom'
+﻿import { ArrowRight, Eye, EyeOff, FileText } from 'lucide-react'
+import { type FormEvent, useState } from 'react'
+import { Navigate } from 'react-router-dom'
 
 import { useAuth } from '../app/providers'
 import { authApi } from '../features/auth/api/authApi'
+import { getErrorMessage } from '../shared/api/client'
 import styles from './LoginPage.module.css'
 
+type LoginMode = 'login' | 'forgot'
+
 export function LoginPage() {
-  const { user, signIn } = useAuth()
-  const navigate = useNavigate()
-  const [mode, setMode] = useState<'login' | 'reset'>('login')
-  const [username, setUsername] = useState('admin')
-  const [password, setPassword] = useState('admin')
+  const { user, signIn, sessionError, retrySession } = useAuth()
+  const [mode, setMode] = useState<LoginMode>('login')
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+
+  const [forgotEmail, setForgotEmail] = useState('')
+  const [forgotError, setForgotError] = useState('')
+  const [forgotSuccess, setForgotSuccess] = useState(false)
+  const [forgotLoading, setForgotLoading] = useState(false)
+
   const [error, setError] = useState('')
-  const [resetSent, setResetSent] = useState(false)
-  const [resetLoading, setResetLoading] = useState(false)
+  const [validationError, setValidationError] = useState('')
+  const [loading, setLoading] = useState(false)
 
-  if (user) return <Navigate to="/" replace />
+  if (user) return <Navigate to={user.need_password_change ? '/change-password' : '/'} replace />
 
-  const submit = (event: FormEvent) => {
+  const submitLogin = async (event: FormEvent) => {
     event.preventDefault()
+    if (loading) return
     setError('')
-    if (signIn(username, password)) navigate('/')
-    else setError('Введите логин и пароль')
-  }
-
-  const resetPassword = async (event: FormEvent) => {
-    event.preventDefault()
-    if (!username.trim()) {
-      setError('Введите логин')
+    setValidationError('')
+    if (!username.trim() || !password) {
+      setValidationError('Введите логин и пароль')
       return
     }
-    setError('')
-    setResetLoading(true)
+    setLoading(true)
     try {
-      await authApi.requestPasswordReset(username.trim())
-      setResetSent(true)
-    } catch {
-      setError('Сервис восстановления пока не подключён. Обратитесь к администратору.')
+      await signIn(username.trim(), password)
+    } catch (error) {
+      setError(getErrorMessage(error))
     } finally {
-      setResetLoading(false)
+      setLoading(false)
     }
+  }
+
+  const submitForgot = async (event: FormEvent) => {
+    event.preventDefault()
+    if (forgotLoading || forgotSuccess) return
+
+    setForgotError('')
+    if (!forgotEmail.trim()) {
+      setForgotError('Введите email')
+      return
+    }
+
+    setForgotLoading(true)
+    try {
+      await authApi.requestPasswordReset(forgotEmail.trim())
+      setForgotSuccess(true)
+    } catch (error) {
+      setForgotError(getErrorMessage(error))
+    } finally {
+      setForgotLoading(false)
+    }
+  }
+
+  const switchToLogin = () => {
+    setMode('login')
+    setForgotEmail('')
+    setForgotError('')
+    setForgotSuccess(false)
+    setForgotLoading(false)
+  }
+
+  const switchToForgot = () => {
+    setMode('forgot')
+    setError('')
+    setValidationError('')
+    setForgotEmail('')
+    setForgotError('')
+    setForgotSuccess(false)
+    setForgotLoading(false)
   }
 
   return (
@@ -67,149 +109,131 @@ export function LoginPage() {
         </div>
         <div className="art-footer">Белорусский национальный технический университет</div>
       </div>
-      {mode === 'login' ? (
-        <LoginForm
-          username={username}
-          password={password}
-          error={error}
-          setUsername={setUsername}
-          setPassword={setPassword}
-          submit={submit}
-          openReset={() => {
-            setMode('reset')
-            setError('')
-          }}
-        />
-      ) : (
-        <ResetForm
-          username={username}
-          error={error}
-          resetSent={resetSent}
-          loading={resetLoading}
-          setUsername={setUsername}
-          submit={resetPassword}
-          back={() => {
-            setMode('login')
-            setResetSent(false)
-            setError('')
-          }}
-        />
-      )}
-    </div>
-  )
-}
 
-function LoginForm({
-  username,
-  password,
-  error,
-  setUsername,
-  setPassword,
-  submit,
-  openReset,
-}: {
-  username: string
-  password: string
-  error: string
-  setUsername: (value: string) => void
-  setPassword: (value: string) => void
-  submit: (event: FormEvent) => void
-  openReset: () => void
-}) {
-  return (
-    <form className={`login-form ${styles.loginForm}`} onSubmit={submit}>
-      <div className={styles.formHeading}>
-        <div className="eyebrow">ДОБРО ПОЖАЛОВАТЬ</div>
-        <h2>Войти в систему</h2>
-        <p>Используйте учётную запись сотрудника БНТУ</p>
-      </div>
-      <label>
-        Логин
-        <input
-          value={username}
-          onChange={(event) => setUsername(event.target.value)}
-          autoComplete="username"
-        />
-      </label>
-      <label>
-        Пароль
-        <input
-          type="password"
-          value={password}
-          onChange={(event) => setPassword(event.target.value)}
-          autoComplete="current-password"
-        />
-      </label>
-      {error && <div className="error">{error}</div>}
-      <button className="primary full" type="submit">
-        Продолжить <ArrowRight size={17} />
-      </button>
-      <button className={styles.textButton} type="button" onClick={openReset}>
-        Забыли пароль?
-      </button>
-      <small className="login-help">Доступ предоставляется администратором системы</small>
-    </form>
-  )
-}
+      <form
+        className={`login-form ${styles.loginForm}`}
+        onSubmit={mode === 'login' ? submitLogin : submitForgot}
+      >
+        <div className={styles.formHeading}>
+          <div className="eyebrow">ДОБРО ПОЖАЛОВАТЬ</div>
+          <h2>{mode === 'login' ? 'Войти в систему' : 'Забыли пароль?'}</h2>
+          <p>
+            {mode === 'login'
+              ? 'Используйте учётную запись сотрудника БНТУ'
+              : 'Введите рабочую почту — пришлём инструкции по восстановлению.'}
+          </p>
+        </div>
 
-function ResetForm({
-  username,
-  error,
-  resetSent,
-  loading,
-  setUsername,
-  submit,
-  back,
-}: {
-  username: string
-  error: string
-  resetSent: boolean
-  loading: boolean
-  setUsername: (value: string) => void
-  submit: (event: FormEvent) => void
-  back: () => void
-}) {
-  if (resetSent)
-    return (
-      <div className={`login-form ${styles.successBox}`}>
-        <Mail size={24} />
-        <h2>Проверьте почту</h2>
-        <p>Если логин существует, на связанную с ним почту отправлен новый пароль.</p>
-        <button className="secondary full" type="button" onClick={back}>
-          Вернуться ко входу
-        </button>
-      </div>
-    )
-  return (
-    <form className={`login-form ${styles.loginForm}`} onSubmit={submit}>
-      <div className={styles.formHeading}>
-        <button className={`back-link ${styles.loginBack}`} type="button" onClick={back}>
-          <ArrowLeft size={16} /> Назад ко входу
-        </button>
-        <div className="eyebrow">ВОССТАНОВЛЕНИЕ ДОСТУПА</div>
-        <h2>Забыли пароль?</h2>
-        <p>Введите логин, и мы отправим новый пароль на почту, указанную в профиле.</p>
-      </div>
-      <label>
-        Логин
-        <input
-          value={username}
-          onChange={(event) => setUsername(event.target.value)}
-          autoComplete="username"
-          autoFocus
-        />
-      </label>
-      {error && <div className="error">{error}</div>}
-      <button className="primary full" type="submit" disabled={loading}>
-        {loading ? (
-          'Отправка...'
+        {mode === 'login' ? (
+          <>
+            <label>
+              Логин
+              <input
+                value={username}
+                onChange={(event) => setUsername(event.target.value)}
+                autoComplete="username"
+                disabled={loading}
+              />
+            </label>
+            <label>
+              Пароль
+              <div className={`password-input ${styles.passwordInput}`}>
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  autoComplete="current-password"
+                  disabled={loading}
+                />
+                <button
+                  type="button"
+                  aria-label="Показать или скрыть пароль"
+                  disabled={loading}
+                  onClick={() => setShowPassword((value) => !value)}
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+            </label>
+
+            <button
+              className={styles.forgotPassword}
+              type="button"
+              disabled={loading}
+              onClick={switchToForgot}
+            >
+              Забыли пароль?
+            </button>
+
+            {validationError && (
+              <div className="error" role="alert">
+                {validationError}
+              </div>
+            )}
+            {error && (
+              <div className="error" role="alert">
+                {error}
+              </div>
+            )}
+
+            <button className="primary full" type="submit" disabled={loading}>
+              {loading ? 'Вход…' : 'Продолжить'} <ArrowRight size={17} />
+            </button>
+
+            {sessionError && !error && (
+              <div className="error" role="alert">
+                Не удалось проверить сессию. {sessionError}
+              </div>
+            )}
+            {sessionError && (
+              <button
+                className="secondary full"
+                type="button"
+                disabled={loading}
+                onClick={retrySession}
+              >
+                Повторить проверку сессии
+              </button>
+            )}
+            <small className="login-help">Доступ предоставляется администратором системы</small>
+          </>
         ) : (
           <>
-            Отправить новый пароль <Mail size={17} />
+            <label>
+              Электронная почта
+              <input
+                type="email"
+                value={forgotEmail}
+                onChange={(event) => setForgotEmail(event.target.value)}
+                placeholder="name@bntu.by"
+                autoComplete="email"
+                disabled={forgotLoading || forgotSuccess}
+                required
+              />
+            </label>
+
+            {forgotError && (
+              <div className="error" role="alert">
+                {forgotError}
+              </div>
+            )}
+
+            {forgotSuccess && (
+              <div className={styles.info} role="status">
+                Если этот email зарегистрирован, мы отправим письмо с дальнейшими инструкциями.
+              </div>
+            )}
+
+            <button className="primary full" type="submit" disabled={forgotLoading || forgotSuccess}>
+              {forgotLoading ? 'Отправка…' : forgotSuccess ? 'Отправлено' : 'Отправить'}
+            </button>
+
+            <button className={styles.backButton} type="button" disabled={forgotLoading} onClick={switchToLogin}>
+              Назад ко входу
+            </button>
           </>
         )}
-      </button>
-      <small className="login-help">Письмо может прийти в течение нескольких минут</small>
-    </form>
+      </form>
+    </div>
   )
 }

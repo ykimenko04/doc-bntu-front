@@ -10,10 +10,10 @@ import {
   Users,
 } from 'lucide-react'
 import { type ReactNode, useEffect, useMemo, useState } from 'react'
-import { NavLink } from 'react-router-dom'
+import { Link, NavLink, useLocation } from 'react-router-dom'
 
 import { useAuth } from '../../app/providers'
-import { checkApiHealth } from '../api/client'
+import { checkApiHealth, getErrorMessage } from '../api/client'
 
 const links = [
   { to: '/', label: 'Организации', icon: Building2 },
@@ -23,9 +23,49 @@ const links = [
   { to: '/users', label: 'Пользователи', icon: Users },
   { to: '/settings', label: 'Настройки', icon: Settings },
 ]
+
+type BreadcrumbItem = {
+  label: string
+  to?: string
+}
+
+function getBreadcrumbItems(pathname: string): BreadcrumbItem[] {
+  const path = pathname.replace(/\/+$/, '') || '/'
+  let sectionItems: BreadcrumbItem[] = []
+
+  if (path === '/change-password') return [{ label: 'Смена пароля' }]
+  if (path === '/users') sectionItems = [{ label: 'Пользователи' }]
+  else if (path === '/applications') sectionItems = [{ label: 'Заявки' }]
+  else if (/^\/applications\/[^/]+$/.test(path)) {
+    sectionItems = [{ label: 'Заявки', to: '/applications' }, { label: 'Карточка заявки' }]
+  } else if (path === '/data') sectionItems = [{ label: 'Импорт и экспорт' }]
+  else if (path === '/audit') sectionItems = [{ label: 'Журнал событий' }]
+  else if (path === '/settings') sectionItems = [{ label: 'Настройки' }]
+  else if (/^\/organizations\/[^/]+$/.test(path)) {
+    sectionItems = [{ label: 'Управление', to: '/' }, { label: 'Карточка организации' }]
+  }
+
+  return [{ label: 'БНТУ', ...(path === '/' ? {} : { to: '/' }) }, ...sectionItems]
+}
+
 export function AppShell({ children }: { children: ReactNode }) {
   const { user, signOut } = useAuth()
-  const [collapsed, setCollapsed] = useState(false)
+  const { pathname } = useLocation()
+  const [collapsed, setCollapsed] = useState(true)
+  const [logoutError, setLogoutError] = useState('')
+  const [loggingOut, setLoggingOut] = useState(false)
+  const logout = async () => {
+    if (loggingOut) return
+    setLogoutError('')
+    setLoggingOut(true)
+    try {
+      await signOut()
+    } catch (error) {
+      setLogoutError(getErrorMessage(error))
+    } finally {
+      setLoggingOut(false)
+    }
+  }
   const [apiStatus, setApiStatus] = useState<'checking' | 'connected' | 'unavailable'>('checking')
   const currentDate = useMemo(
     () =>
@@ -71,6 +111,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     connected: 'API подключен',
     unavailable: 'API недоступен',
   }[apiStatus]
+  const breadcrumbItems = getBreadcrumbItems(pathname)
 
   return (
     <div className={`app-shell ${collapsed ? 'sidebar-collapsed' : ''}`}>
@@ -90,9 +131,11 @@ export function AppShell({ children }: { children: ReactNode }) {
             <b>ЗАКАЗ</b>
           </span>
         </button>
-        <div className="workspace-label">РАБОЧЕЕ ПРОСТРАНСТВО</div>
+        <div className={`workspace-label ${collapsed ? 'workspace-label-hidden' : ''}`}>
+          РАБОЧЕЕ ПРОСТРАНСТВО
+        </div>
         <nav>
-          {links.map(({ to, label, icon: Icon }) => (
+          {(user?.need_password_change ? [] : links).map(({ to, label, icon: Icon }) => (
             <NavLink key={to} to={to} end={to === '/'} onClick={() => setCollapsed(true)}>
               <Icon size={18} />
               <span>{label}</span>
@@ -105,7 +148,8 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
           <button
             className="user-menu"
-            onClick={signOut}
+            onClick={logout}
+            disabled={loggingOut}
             title="Выйти из аккаунта"
             aria-label="Выйти из аккаунта"
           >
@@ -125,12 +169,44 @@ export function AppShell({ children }: { children: ReactNode }) {
         }}
       >
         <header className="topbar">
-          <div className="breadcrumb">
-            <LayoutDashboard size={16} /> БНТУ <span>/</span> Управление
-          </div>
+          <nav className="breadcrumb" aria-label="Хлебные крошки">
+            {breadcrumbItems.map((item, index) => {
+              const isCurrent = index === breadcrumbItems.length - 1
+              const content = (
+                <>
+                  {index === 0 && <LayoutDashboard size={16} />}
+                  {item.label}
+                </>
+              )
+
+              return (
+                <span className="breadcrumb-item" key={`${item.label}-${index}`}>
+                  {index > 0 && (
+                    <span className="breadcrumb-separator" aria-hidden="true">
+                      /
+                    </span>
+                  )}
+                  {item.to && !isCurrent ? (
+                    <Link to={item.to}>{content}</Link>
+                  ) : (
+                    <span className="breadcrumb-current" aria-current="page">
+                      {content}
+                    </span>
+                  )}
+                </span>
+              )
+            })}
+          </nav>
           <div className="topbar-date">{currentDate}</div>
         </header>
-        <section className="content">{children}</section>
+        <section className="content">
+          {logoutError && (
+            <p className="error" role="alert">
+              Выход не подтверждён сервером: {logoutError}
+            </p>
+          )}
+          {children}
+        </section>
       </main>
     </div>
   )
